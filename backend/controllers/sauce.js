@@ -41,9 +41,21 @@ exports.modifyThing = (req, res, next) => {
       ...JSON.parse(req.body.sauce),
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     } : { ...req.body };
-  Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-    .then(() => res.status(200).json({ message: 'Objet modifié !'}))
-    .catch(error => res.status(400).json({ error }));
+
+    const regexText = /^[A-Z0-9 .'"_,()àâãäåæçèéêëìíîïðñòóôõøùúûüýÿ!?-]{1,500}$/i;
+  
+    let nameValue = regexText.test(sauceObject.name);
+    let manufacturerValue = regexText.test(sauceObject.manufacturer);
+    let descriptionValue = regexText.test(sauceObject.description);
+    let pepperValue = regexText.test(sauceObject.mainPepper);
+  
+    if ((nameValue == true) && (manufacturerValue == true) && (descriptionValue == true) && (pepperValue == true)) {
+      Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+        .then(() => res.status(200).json({ message: 'Objet modifié !'}))
+        .catch(error => res.status(400).json({ error }));      
+    } else {
+      return res.status(400).json({ message: 'les champs sont invalides' })
+    }
 };
 
 exports.deleteThing = (req, res, next) => {
