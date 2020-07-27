@@ -3,19 +3,30 @@ const fs = require('fs');
 const { request } = require('http');
 
 exports.createThing = (req, res, next) => {
+  const regexText = /^[A-Z0-9 .'"_,()àâãäåæçèéêëìíîïðñòóôõøùúûüýÿ!?-]{1,500}$/i;
   const sauceObject = JSON.parse(req.body.sauce);
-  delete sauceObject._id;
-  const sauce = new Sauce({
-    ...sauceObject,
-    likes: 0,
-    dislikes: 0,
-    usersLiked: [], 
-    usersDisliked: [],
-    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-  });
-  sauce.save()
-    .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
-    .catch(error => res.status(400).json({ error }));
+
+  let nameValue = regexText.test(sauceObject.name);
+  let manufacturerValue = regexText.test(sauceObject.manufacturer);
+  let descriptionValue = regexText.test(sauceObject.description);
+  let pepperValue = regexText.test(sauceObject.mainPepper);
+
+  if ((nameValue == true) && (manufacturerValue == true) && (descriptionValue == true) && (pepperValue == true)) {
+    delete sauceObject._id;
+    const sauce = new Sauce({
+      ...sauceObject,
+      likes: 0,
+      dislikes: 0,
+      usersLiked: [], 
+      usersDisliked: [],
+      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    });
+    sauce.save()
+      .then(() => res.status(201).json({ message: 'Objet enregistré !'}))
+      .catch(error => res.status(400).json({ error }));
+  } else {
+    return res.status(400).json({ message: 'les champs sont invalides' })
+  }
 };
 
 exports.getOneThing = (req, res, next) => {
@@ -58,9 +69,7 @@ exports.likeThing = (req, res, next) => {
   let index;
   Sauce.findOne({ _id: req.params.id })
   .then(sauce => {
-    console.log(sauce);
     if (req.body.like == 1) {
-      console.log("(egal a 1) " + req.body.like);
       sauce.likes += 1;
       sauce.usersLiked.push(req.body.userId);
       sauce = {
@@ -70,7 +79,6 @@ exports.likeThing = (req, res, next) => {
     }
         
     if (req.body.like == -1) {
-      console.log("(egal a -1) " + req.body.like);
       sauce.dislikes += 1;
       sauce.usersDisliked.push(req.body.userId);
       sauce = {
@@ -100,16 +108,12 @@ exports.likeThing = (req, res, next) => {
       }
     }
 
-    console.log("(juste avant la reponse )" + req.body.like);
-    console.log(sauce);
     Sauce.updateOne({ _id: req.params.id }, { $set: {...sauce} })
     .then(() => res.status(200).json({ message: 'Objet modifié !'}))
     .catch(error => res.status(500).json({ error }));
-    console.log('sauce.name');
   })
   .catch(error => res.status(400).json({ error }));
 }
 
 
   // regex element de formulaire (titre, description, mot de passe et email pour que ce soit valide)
-  // object sauce pour les like et dislike
