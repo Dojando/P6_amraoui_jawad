@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 exports.signup = (req, res, next) => {
-  const email = /^([a-z\d\.-]+)@([a-z\d-]+)\.([a-z]+){2,4}$/i;
-  const pwd = /((?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,50})/;
+  const email = /^([a-z\d\.-]+)@([a-z\d-]+)\.([a-z]){2,4}$/;
+  const pwd = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{6,20}$/;
   let emailValue = email.test(req.body.email);
   let pwdValue = pwd.test(req.body.password);
   if ((emailValue == true) && (pwdValue == true)) {
